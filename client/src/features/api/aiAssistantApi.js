@@ -1,7 +1,7 @@
 // File: src/features/api/aiAssistantApi.js
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
-const AI_ASSISTANT_API = "import.meta.env.VITE_BACKEND_URL/api/v1/ai";
+const AI_ASSISTANT_API = `${import.meta.env.VITE_BACKEND_URL}/api/v1/ai`;
 
 export const aiAssistantApi = createApi({
   reducerPath: "aiAssistantApi",

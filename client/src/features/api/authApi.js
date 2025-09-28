@@ -5,7 +5,7 @@ import { userLoggedIn, userLoggedOut } from "../authslice.js";
 // import { userLoggedIn} from "../authslice.js";
 
 // const USER_API = "http://localhost:5173/api/v1/user/"
-const USER_API = "import.meta.env.VITE_BACKEND_URL/api/v1/user/"
+const USER_API = `${import.meta.env.VITE_BACKEND_URL}/api/v1/user/`
 
 export const authApi = createApi({
     reducerPath:"authApi",
