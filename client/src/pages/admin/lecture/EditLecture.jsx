@@ -3,7 +3,7 @@ import { ArrowLeft } from "lucide-react";
 import React from "react";
 import { Link, useParams } from "react-router-dom";
 import LectureTab from "./LectureTab";
-import LectureNotes from "@/components/LectureNotes"; // ADDED
+import LectureNotes from "../../../components/LectureNotes"; // ADDED
 import { useSelector } from "react-redux"; 
 
 const EditLecture = () => {
