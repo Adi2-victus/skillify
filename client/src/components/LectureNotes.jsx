@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { 
   useGetLectureNotesQuery, 
   useUploadLectureNoteMutation 
-} from '@/features/api/LectureNoteApi';
+} from '@/features/api/lectureNoteApi';
 import { Loader2, File, X } from 'lucide-react';
 import { toast } from 'sonner'; // Added toast import
 
