@@ -42,7 +42,7 @@ app.get("/api/csrf-token", csrfProtection, (req, res) => {
 
 app.use("/api/v1/purchase", webhookRouter);
 app.use(cors({
-    origin:"http://localhost:5173",
+    origin:"https://skillifyapp.vercel.app",
     credentials:true
 }));
  
