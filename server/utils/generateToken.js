@@ -10,7 +10,7 @@
      .cookie("token", token, {
        httpOnly: true,
        secure: process.env.NODE_ENV === "production", // ✅ only secure on prod
-      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax", // ✅ allow cross-domain
+      sameSite: "none" ,// ✅ allow cross-domain
        maxAge: 24 * 60 * 60 * 1000, // 1 day
      }).json({
          success:true,
