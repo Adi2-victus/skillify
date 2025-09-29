@@ -157,10 +157,7 @@ export const getCourseDetailWithPurchaseStatus = async (req, res) => {
   try {
     const { courseId } = req.params;
     const userId = req.id;
-    // Validate course ID format
-    // if (!mongoose.Types.ObjectId.isValid(courseId)) {
-    //   return res.status(400).json({ message: "Invalid course ID format" });
-    // }
+
     const course = await Course.findById(courseId)
       .populate({ path: "creator" })
       .populate({ path: "lectures" 
