@@ -41,10 +41,32 @@ app.get("/api/csrf-token", csrfProtection, (req, res) => {
 });
 
 app.use("/api/v1/purchase", webhookRouter);
-app.use(cors({
-    origin:"https://skillifyapp.vercel.app",
-    credentials:true
-}));
+// app.use(cors({
+//     origin:"https://skillifyapp.vercel.app",
+//     credentials:true
+// }));
+
+//  CORS setup
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://skillifyapp.vercel.app",
+];
+
+if (process.env.FRONTEND_URL && !allowedOrigins.includes(process.env.FRONTEND_URL)) {
+  allowedOrigins.push(process.env.FRONTEND_URL);
+}
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true); // allow Postman / curl
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      return callback(new Error("CORS not allowed for this origin"), false);
+    },
+    credentials: true,
+  })
+);
+
  
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
