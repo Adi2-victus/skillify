@@ -16,7 +16,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-import bodyParser from "body-parser";
+// import bodyParser from "body-parser";
 
 dotenv.config({});
 
@@ -41,12 +41,12 @@ app.get("/api/csrf-token", csrfProtection, (req, res) => {
   res.json({ csrfToken: req.csrfToken() });
 });
 
-// app.use("/api/v1/purchase", webhookRouter);
-app.post(
-  "/api/v1/purchase/webhook",
-  bodyParser.raw({ type: "application/json" }),
-  webhookRouter
-);
+app.use("/api/v1/purchase", webhookRouter);
+// app.post(
+//   "/api/v1/purchase/webhook",
+//   bodyParser.raw({ type: "application/json" }),
+//   webhookRouter
+// );
 app.use(cors({
     origin:"https://skillifyapp.vercel.app",
     credentials:true

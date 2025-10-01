@@ -5,7 +5,8 @@ import { Lecture } from "../models/lecture.model.js";
 import { User } from "../models/user.model.js";
 // import mongoose from "mongoose";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-const FRONTEND_URL = process.env.FRONTEND_URL 
+// Ensure we always provide an absolute https URL to Stripe
+const FRONTEND_URL = process.env.FRONTEND_URL || "https://skillifyapp.vercel.app";
 export const createCheckoutSession = async (req, res) => {
   try {
     const userId = req.id;
