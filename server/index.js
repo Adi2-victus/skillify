@@ -9,7 +9,7 @@ import courseRoute from "./routes/course.route.js";
 import mediaRoute from "./routes/media.route.js";
 // import purchaseRoute from "./routes/purchaseCourse.route.js";
 import courseProgressRoute from "./routes/courseProgress.route.js";
-// import { stripeWebhook } from "./controllers/coursePurchase.controller.js";
+import { stripeWebhook } from "./controllers/coursePurchase.controller.js";
 import purchaseRoute, { webhookRouter } from "./routes/purchaseCourse.route.js";
 import lectureNoteRoute from "./routes/lectureNote.route.js";
 import path from 'path';
@@ -41,6 +41,8 @@ app.get("/api/csrf-token", csrfProtection, (req, res) => {
   res.json({ csrfToken: req.csrfToken() });
 });
 
+// Register webhook explicitly to avoid any routing mismatches (must be before express.json)
+app.post("/api/v1/purchase/webhook", express.raw({ type: "application/json" }), stripeWebhook);
 app.use("/api/v1/purchase", webhookRouter);
 // app.post(
 //   "/api/v1/purchase/webhook",
