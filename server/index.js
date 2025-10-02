@@ -50,7 +50,6 @@ app.post("/webhook", express.raw({ type: "application/json" }), stripeWebhook);
 app.post(/.*webhook\/?$/, express.raw({ type: "application/json" }), stripeWebhook);
 
 
-// app.use("/api/v1/purchase", webhookRouter);
 
 
 app.use(cors({
