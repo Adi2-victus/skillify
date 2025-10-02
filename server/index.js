@@ -10,7 +10,7 @@ import mediaRoute from "./routes/media.route.js";
 // import purchaseRoute from "./routes/purchaseCourse.route.js";
 import courseProgressRoute from "./routes/courseProgress.route.js";
 import { stripeWebhook } from "./controllers/coursePurchase.controller.js";
-import purchaseRoute from "./routes/purchaseCourse.route.js";
+import purchaseRoute,{webhookRouter} from "./routes/purchaseCourse.route.js";
 import lectureNoteRoute from "./routes/lectureNote.route.js";
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -44,8 +44,8 @@ app.get("/api/csrf-token", csrfProtection, (req, res) => {
 // Register webhook explicitly to avoid any routing mismatches (must be before express.json)
 app.post("/api/v1/purchase/webhook", express.raw({ type: "application/json" }), stripeWebhook);
 // Extra tolerant routes in case the configured endpoint omits the prefix
-// app.post("/purchase/webhook", express.raw({ type: "application/json" }), stripeWebhook);
-// app.post("/webhook", express.raw({ type: "application/json" }), stripeWebhook);
+app.post("/purchase/webhook", express.raw({ type: "application/json" }), stripeWebhook);
+app.post("/webhook", express.raw({ type: "application/json" }), stripeWebhook);
 
 
 // app.use("/api/v1/purchase", webhookRouter);
