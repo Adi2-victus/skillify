@@ -3,11 +3,11 @@ import isAuthenticated from "../middlewares/isAuthenticated.js";
 import { createCheckoutSession, getAllPurchasedCourse, getCourseDetailWithPurchaseStatus, stripeWebhook } from "../controllers/coursePurchase.controller.js";
 
 const router = express.Router();
-export const webhookRouter = express.Router();
-webhookRouter.route("/webhook").post(
-  express.raw({ type: "application/json" }), 
-  stripeWebhook
-);
+// export const webhookRouter = express.Router();
+// webhookRouter.route("/webhook").post(
+//   express.raw({ type: "application/json" }), 
+//   stripeWebhook
+// );
 
 router.route("/checkout/create-checkout-session").post(isAuthenticated, createCheckoutSession);
 // router.route("/webhook").post(express.raw({type:"application/json"}), stripeWebhook);

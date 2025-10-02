@@ -43,12 +43,14 @@ app.get("/api/csrf-token", csrfProtection, (req, res) => {
 
 // Register webhook explicitly to avoid any routing mismatches (must be before express.json)
 app.post("/api/v1/purchase/webhook", express.raw({ type: "application/json" }), stripeWebhook);
-app.use("/api/v1/purchase", webhookRouter);
-// app.post(
-//   "/api/v1/purchase/webhook",
-//   bodyParser.raw({ type: "application/json" }),
-//   webhookRouter
-// );
+// Extra tolerant routes in case the configured endpoint omits the prefix
+// app.post("/purchase/webhook", express.raw({ type: "application/json" }), stripeWebhook);
+// app.post("/webhook", express.raw({ type: "application/json" }), stripeWebhook);
+
+
+// app.use("/api/v1/purchase", webhookRouter);
+
+
 app.use(cors({
     origin:"https://skillifyapp.vercel.app",
     credentials:true
