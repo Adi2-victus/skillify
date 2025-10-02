@@ -46,6 +46,8 @@ app.post("/api/v1/purchase/webhook", express.raw({ type: "application/json" }), 
 // Extra tolerant routes in case the configured endpoint omits the prefix
 app.post("/purchase/webhook", express.raw({ type: "application/json" }), stripeWebhook);
 app.post("/webhook", express.raw({ type: "application/json" }), stripeWebhook);
+// Final catch-all for any path that ends with 'webhook' (handles trailing slashes or typos in prefix)
+app.post(/.*webhook\/?$/, express.raw({ type: "application/json" }), stripeWebhook);
 
 
 // app.use("/api/v1/purchase", webhookRouter);
