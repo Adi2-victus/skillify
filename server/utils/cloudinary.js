@@ -6,12 +6,14 @@ cloudinary.config({
   api_key: process.env.API_KEY,
   api_secret: process.env.API_SECRET,
   cloud_name: process.env.CLOUD_NAME,
+  secure: true, // Force HTTPS for all URLs
 });
 
 export const uploadMedia = async (file) => {
   try {
     const uploadResponse = await cloudinary.uploader.upload(file, {
       resource_type: "auto",
+      secure: true, // Force HTTPS URLs
     });
     return uploadResponse;
   } catch (error) {

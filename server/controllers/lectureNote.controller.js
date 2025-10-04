@@ -31,7 +31,7 @@ export const uploadLectureNote = async (req, res) => {
       message: "Note uploaded successfully",
        note: {
         ...note._doc,
-        fileUrl: `https://skillifyapp.vercel.app/uploads/notes/${filename}`
+        fileUrl: `https://skillify-7k0y.onrender.com/uploads/notes/${filename}`
       }
     });
 
@@ -57,7 +57,7 @@ export const getLectureNotes = async (req, res) => {
 
     const notesWithUrls = notes.map(note => ({
       ...note._doc,
-      fileUrl: `http://localhost:3000/uploads/notes/${note.filePath.split('/').pop()}`
+      fileUrl: `https://skillifyapp.vercel.app/uploads/notes/${note.filePath.split('/').pop()}`
     }));
 
     res.status(200).json(notesWithUrls);
