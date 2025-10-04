@@ -168,14 +168,12 @@ export const stripeWebhook = async (req, res) => {
   const sig = req.headers['stripe-signature'];
 
   try {
-    // Verify signature with raw buffer
     event = stripe.webhooks.constructEvent(
       req.body,
       sig,
       process.env.WEBHOOK_ENDPOINT_SECRET
     );
   } catch (error) {
-    // Fallback for environments where signature verification can fail
     try {
       const raw = Buffer.isBuffer(req.body) ? req.body.toString() : req.body;
       event = typeof raw === 'string' ? JSON.parse(raw) : raw;
@@ -191,7 +189,8 @@ export const stripeWebhook = async (req, res) => {
     // Handle multiple event types that indicate successful payment
     if (event.type === "checkout.session.completed" || 
         event.type === "payment_intent.succeeded" ||
-        event.type === "charge.succeeded") {
+        event.type === "charge.succeeded" ||
+        event.type === "charge.updated") {
       
       let session;
       
@@ -199,20 +198,21 @@ export const stripeWebhook = async (req, res) => {
         session = event.data.object;
       } else if (event.type === "payment_intent.succeeded") {
         const paymentIntent = event.data.object;
-        // Find session by payment intent ID
-        session = await stripe.checkout.sessions.list({
+        const sessions = await stripe.checkout.sessions.list({
           payment_intent: paymentIntent.id,
           limit: 1
         });
-        session = session.data[0];
-      } else if (event.type === "charge.succeeded") {
+        session = sessions.data[0];
+      } else if (event.type === "charge.succeeded" || event.type === "charge.updated") {
         const charge = event.data.object;
-        // Find session by payment intent ID from charge
-        session = await stripe.checkout.sessions.list({
-          payment_intent: charge.payment_intent,
-          limit: 1
-        });
-        session = session.data[0];
+        // Only process if charge is successful
+        if (charge.status === 'succeeded') {
+          const sessions = await stripe.checkout.sessions.list({
+            payment_intent: charge.payment_intent,
+            limit: 1
+          });
+          session = sessions.data[0];
+        }
       }
 
       if (!session) {
@@ -267,11 +267,35 @@ export const stripeWebhook = async (req, res) => {
     }
   } catch (error) {
     console.error("Error handling event:", error);
-    // Don't return 500 to Stripe - they'll retry
     return res.status(200).json({ received: true });
   }
 
   res.status(200).json({ received: true });
+};
+
+export const getAllPurchasedCourse = async (req, res) => {
+  try {
+    const userId = req.id; // Get user ID from request
+    
+    const purchasedCourse = await CoursePurchase.find({
+      userId: userId, // Filter by user
+      status: "completed",
+    }).populate("courseId");
+    
+    if (!purchasedCourse) {
+      return res.status(404).json({
+        purchasedCourse: [],
+      });
+    }
+    return res.status(200).json({
+      purchasedCourse,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      message: "Server error"
+    });
+  }
 };
 
 
