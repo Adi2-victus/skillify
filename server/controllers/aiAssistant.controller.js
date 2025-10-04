@@ -34,9 +34,9 @@ export const aiAssistant = async (req, res) => {
     // Initialize Gemini
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
+      model: "gemini-2.5-flash",
       generationConfig: {
-        maxOutputTokens: 1024,
+        maxOutputTokens: 2048,
         temperature: 0.7,
       },
       systemInstruction: {
@@ -53,8 +53,17 @@ export const aiAssistant = async (req, res) => {
       }]
     });
 
-    const response = await result.response;
-    const answer = response.text();
+    // const response = await result.response;
+    //  const answer = response.text();
+
+    let answer = "";
+    if (result?.response?.text) {
+      answer = result.response.text();
+    } else if (typeof result?.response === "string") {
+      answer = result.response;
+    } else {
+      answer = "Sorry, I could not generate a response.";
+    }
 
     return res.status(200).json({ answer });
   } catch (error) {
