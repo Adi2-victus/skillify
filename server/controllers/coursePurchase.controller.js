@@ -112,25 +112,55 @@ export const stripeWebhook = async (req, res) => {
     }
   }
 
-  // Handle the checkout session completed event
-  if (event.type === "checkout.session.completed" ) {
-    console.log("check session complete is called");
+  // Handle the checkout session completed event and other payment events
+  if (event.type === "checkout.session.completed" || 
+      event.type === "payment_intent.succeeded" ||
+      event.type === "charge.succeeded" ||
+      event.type === "charge.updated") {
+    console.log(`Processing event type: ${event.type}`);
 
     try {
-      const session = event.data.object;
+      let session = event.data.object;
+      let paymentId = session.id;
+
+      // For charge events, we need to find the session using payment_intent
+      if (event.type === "charge.succeeded" || event.type === "charge.updated") {
+        const charge = event.data.object;
+        if (charge.status === 'succeeded' && charge.payment_intent) {
+          try {
+            const sessions = await stripe.checkout.sessions.list({
+              payment_intent: charge.payment_intent,
+              limit: 1
+            });
+            if (sessions.data.length > 0) {
+              session = sessions.data[0];
+              paymentId = session.id;
+            }
+          } catch (stripeError) {
+            console.log("Could not find session for charge:", charge.id);
+            return res.status(200).json({ received: true });
+          }
+        } else {
+          // Charge not succeeded, ignore
+          return res.status(200).json({ received: true });
+        }
+      }
 
       const purchase = await CoursePurchase.findOne({
-        paymentId: session.id,
+        paymentId: paymentId,
       }).populate({ path: "courseId" });
 
       if (!purchase) {
-        return res.status(404).json({ message: "Purchase not found" });
+        console.log("Purchase not found for paymentId:", paymentId);
+        return res.status(200).json({ received: true });
       }
 
-      if (session.amount_total) {
-        purchase.amount = session.amount_total / 100;
-      }
-      purchase.status = "completed";
+      // Only process if not already completed
+      if (purchase.status !== "completed") {
+        if (session.amount_total) {
+          purchase.amount = session.amount_total / 100;
+        }
+        purchase.status = "completed";
 
       // Make all lectures visible by setting `isPreviewFree` to true
       if (purchase.courseId && purchase.courseId.lectures.length > 0) {
@@ -149,15 +179,18 @@ export const stripeWebhook = async (req, res) => {
         { new: true }
       );
 
-      // Update course to add user ID to enrolledStudents
-      await Course.findByIdAndUpdate(
-        purchase.courseId._id,
-        { $addToSet: { enrolledStudents: purchase.userId } }, // Add user ID to enrolledStudents
-        { new: true }
-      );
+        // Update course to add user ID to enrolledStudents
+        await Course.findByIdAndUpdate(
+          purchase.courseId._id,
+          { $addToSet: { enrolledStudents: purchase.userId } }, // Add user ID to enrolledStudents
+          { new: true }
+        );
+
+        console.log("Purchase completed successfully for user:", purchase.userId);
+      }
     } catch (error) {
       console.error("Error handling event:", error);
-      return res.status(500).json({ message: "Internal Server Error" });
+      return res.status(200).json({ received: true });
     }
   }
   res.status(200).json({ received: true });
