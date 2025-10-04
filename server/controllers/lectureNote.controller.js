@@ -57,7 +57,7 @@ export const getLectureNotes = async (req, res) => {
 
     const notesWithUrls = notes.map(note => ({
       ...note._doc,
-      fileUrl: `https://skillifyapp.vercel.app/uploads/notes/${note.filePath.split('/').pop()}`
+      fileUrl: `https://skillify-7k0y.onrender.com/uploads/notes/${note.filePath.split('/').pop()}`
     }));
 
     res.status(200).json(notesWithUrls);
