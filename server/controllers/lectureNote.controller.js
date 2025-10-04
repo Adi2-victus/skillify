@@ -31,7 +31,7 @@ export const uploadLectureNote = async (req, res) => {
       message: "Note uploaded successfully",
        note: {
         ...note._doc,
-        fileUrl: `http://localhost:3000/uploads/notes/${filename}`
+        fileUrl: `https://skillifyapp.vercel.app/uploads/notes/${filename}`
       }
     });
 
