@@ -273,30 +273,7 @@ export const stripeWebhook = async (req, res) => {
   res.status(200).json({ received: true });
 };
 
-export const getAllPurchasedCourse = async (req, res) => {
-  try {
-    const userId = req.id; // Get user ID from request
-    
-    const purchasedCourse = await CoursePurchase.find({
-      userId: userId, // Filter by user
-      status: "completed",
-    }).populate("courseId");
-    
-    if (!purchasedCourse) {
-      return res.status(404).json({
-        purchasedCourse: [],
-      });
-    }
-    return res.status(200).json({
-      purchasedCourse,
-    });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      message: "Server error"
-    });
-  }
-};
+
 
 
 
