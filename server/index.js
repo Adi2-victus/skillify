@@ -10,7 +10,7 @@ import mediaRoute from "./routes/media.route.js";
 // import purchaseRoute from "./routes/purchaseCourse.route.js";
 import courseProgressRoute from "./routes/courseProgress.route.js";
 import { stripeWebhook } from "./controllers/coursePurchase.controller.js";
-import purchaseRoute,{webhookRouter} from "./routes/purchaseCourse.route.js";
+import purchaseRoute from "./routes/purchaseCourse.route.js";
 import lectureNoteRoute from "./routes/lectureNote.route.js";
 import path from 'path';
 import { fileURLToPath } from 'url';
