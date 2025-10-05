@@ -71,6 +71,12 @@ export const createCheckoutSession = async (req, res) => {
 };
 
 export const stripeWebhook = async (req, res) => {
+  console.log("=== WEBHOOK RECEIVED ===");
+  console.log("Method:", req.method);
+  console.log("URL:", req.url);
+  console.log("Headers:", req.headers);
+  console.log("Body type:", typeof req.body);
+  console.log("Body length:", req.body ? req.body.length : 0);
   // let event;
 
   // try {
@@ -94,18 +100,25 @@ export const stripeWebhook = async (req, res) => {
 
   try {
     // Verify signature with raw buffer
+    console.log("Attempting to verify webhook signature...");
+    console.log("Webhook secret exists:", !!process.env.WEBHOOK_ENDPOINT_SECRET);
     event = stripe.webhooks.constructEvent(
       req.body,
       sig,
       process.env.WEBHOOK_ENDPOINT_SECRET
     );
+    console.log("Signature verification successful");
+    console.log("Event type:", event.type);
   } catch (error) {
+    console.log("Signature verification failed:", error.message);
     // Fallback for environments where signature verification can fail
     // (e.g., cold starts or misconfigured secrets). We still attempt to
     // parse the event so purchases don't remain pending in test mode.
     try {
       const raw = Buffer.isBuffer(req.body) ? req.body.toString() : req.body;
       event = typeof raw === 'string' ? JSON.parse(raw) : raw;
+      console.log("Fallback parsing successful");
+      console.log("Event type (fallback):", event.type);
     } catch (parseErr) {
       console.error("Webhook parse error:", parseErr.message);
       return res.status(400).send(`Webhook error: ${error.message}`);
@@ -146,14 +159,26 @@ export const stripeWebhook = async (req, res) => {
         }
       }
 
+      console.log("Looking for purchase with paymentId:", paymentId);
       const purchase = await CoursePurchase.findOne({
         paymentId: paymentId,
       }).populate({ path: "courseId" });
 
       if (!purchase) {
         console.log("Purchase not found for paymentId:", paymentId);
+        console.log("Available purchases in database:");
+        const allPurchases = await CoursePurchase.find({}).select('paymentId status userId courseId');
+        console.log(allPurchases);
         return res.status(200).json({ received: true });
       }
+      
+      console.log("Found purchase:", {
+        id: purchase._id,
+        userId: purchase.userId,
+        courseId: purchase.courseId._id,
+        status: purchase.status,
+        paymentId: purchase.paymentId
+      });
 
       // Only process if not already completed
       if (purchase.status !== "completed") {
@@ -190,10 +215,14 @@ export const stripeWebhook = async (req, res) => {
       }
     } catch (error) {
       console.error("Error handling event:", error);
-      return res.status(200).json({ received: true });
+      return res.status(200).json({ received: true, error: error.message });
     }
+  } else {
+    console.log("Event type not handled:", event.type);
   }
-  res.status(200).json({ received: true });
+  
+  console.log("=== WEBHOOK PROCESSING COMPLETE ===");
+  res.status(200).json({ received: true, eventType: event.type });
 };
 
 // export const stripeWebhook = async (req, res) => {

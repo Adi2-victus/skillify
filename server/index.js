@@ -26,9 +26,32 @@ const app = express();
 
 const PORT = process.env.PORT || 3000;
 
-// At the top ofe
+// Register webhook routes FIRST - before any middleware that might interfere
+app.post("/api/v1/purchase/webhook", express.raw({ type: "application/json" }), stripeWebhook);
+// Extra tolerant routes in case the configured endpoint omits the prefix
+app.post("/purchase/webhook", express.raw({ type: "application/json" }), stripeWebhook);
+app.post("/webhook", express.raw({ type: "application/json" }), stripeWebhook);
+// Additional webhook endpoints for common Stripe configurations
+app.post("/stripe/webhook", express.raw({ type: "application/json" }), stripeWebhook);
+app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), stripeWebhook);
+app.post("/api/webhook", express.raw({ type: "application/json" }), stripeWebhook);
 
+// Catch-all webhook route for any other patterns
+app.post("*webhook*", express.raw({ type: "application/json" }), stripeWebhook);
 
+// Test route to verify webhook endpoint is reachable
+app.get("/api/v1/purchase/webhook", (req, res) => {
+  res.status(200).json({ message: "Webhook endpoint is reachable", timestamp: new Date().toISOString() });
+});
+
+// Debug endpoint to check server status
+app.get("/health", (req, res) => {
+  res.status(200).json({ 
+    status: "OK", 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || "development"
+  });
+});
 
 app.use(cookieParser());
 
@@ -41,11 +64,7 @@ app.get("/api/csrf-token", csrfProtection, (req, res) => {
   res.json({ csrfToken: req.csrfToken() });
 });
 
-// Register webhook explicitly to avoid any routing mismatches (must be before express.json)
-app.post("/api/v1/purchase/webhook", express.raw({ type: "application/json" }), stripeWebhook);
-// Extra tolerant routes in case the configured endpoint omits the prefix
-app.post("/purchase/webhook", express.raw({ type: "application/json" }), stripeWebhook);
-app.post("/webhook", express.raw({ type: "application/json" }), stripeWebhook);
+// Webhook routes moved to top of file
 
 
 
