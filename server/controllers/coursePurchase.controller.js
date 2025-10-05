@@ -71,12 +71,6 @@ export const createCheckoutSession = async (req, res) => {
 };
 
 export const stripeWebhook = async (req, res) => {
-  console.log("=== WEBHOOK RECEIVED ===");
-  console.log("Method:", req.method);
-  console.log("URL:", req.url);
-  console.log("Headers:", req.headers);
-  console.log("Body type:", typeof req.body);
-  console.log("Body length:", req.body ? req.body.length : 0);
   // let event;
 
   // try {
@@ -99,93 +93,36 @@ export const stripeWebhook = async (req, res) => {
   const sig = req.headers['stripe-signature'];
 
   try {
-    // Verify signature with raw buffer
-    console.log("Attempting to verify webhook signature...");
-    console.log("Webhook secret exists:", !!process.env.WEBHOOK_ENDPOINT_SECRET);
+    // Use raw body buffer instead of stringified JSON
     event = stripe.webhooks.constructEvent(
-      req.body,
+      req.body,  // Raw buffer
       sig,
       process.env.WEBHOOK_ENDPOINT_SECRET
     );
-    console.log("Signature verification successful");
-    console.log("Event type:", event.type);
   } catch (error) {
-    console.log("Signature verification failed:", error.message);
-    // Fallback for environments where signature verification can fail
-    // (e.g., cold starts or misconfigured secrets). We still attempt to
-    // parse the event so purchases don't remain pending in test mode.
-    try {
-      const raw = Buffer.isBuffer(req.body) ? req.body.toString() : req.body;
-      event = typeof raw === 'string' ? JSON.parse(raw) : raw;
-      console.log("Fallback parsing successful");
-      console.log("Event type (fallback):", event.type);
-    } catch (parseErr) {
-      console.error("Webhook parse error:", parseErr.message);
-      return res.status(400).send(`Webhook error: ${error.message}`);
-    }
+    console.error("Webhook error:", error.message);
+    return res.status(400).send(`Webhook error: ${error.message}`);
   }
 
-  // Handle the checkout session completed event and other payment events
-  if (event.type === "checkout.session.completed" || 
-      event.type === "payment_intent.succeeded" ||
-      event.type === "charge.succeeded" ||
-      event.type === "charge.updated") {
-    console.log(`Processing event type: ${event.type}`);
+  // Handle the checkout session completed event
+  if (event.type === "checkout.session.completed") {
+    console.log("check session complete is called");
 
     try {
-      let session = event.data.object;
-      let paymentId = session.id;
+      const session = event.data.object;
 
-      // For charge events, we need to find the session using payment_intent
-      if (event.type === "charge.succeeded" || event.type === "charge.updated") {
-        const charge = event.data.object;
-        if (charge.status === 'succeeded' && charge.payment_intent) {
-          try {
-            const sessions = await stripe.checkout.sessions.list({
-              payment_intent: charge.payment_intent,
-              limit: 1
-            });
-            if (sessions.data.length > 0) {
-              session = sessions.data[0];
-              paymentId = session.id;
-            }
-          } catch (stripeError) {
-            console.log("Could not find session for charge:", charge.id);
-            return res.status(200).json({ received: true });
-          }
-        } else {
-          // Charge not succeeded, ignore
-          return res.status(200).json({ received: true });
-        }
-      }
-
-      console.log("Looking for purchase with paymentId:", paymentId);
       const purchase = await CoursePurchase.findOne({
-        paymentId: paymentId,
+        paymentId: session.id,
       }).populate({ path: "courseId" });
 
       if (!purchase) {
-        console.log("Purchase not found for paymentId:", paymentId);
-        console.log("Available purchases in database:");
-        const allPurchases = await CoursePurchase.find({}).select('paymentId status userId courseId');
-        console.log(allPurchases);
-        return res.status(200).json({ received: true });
+        return res.status(404).json({ message: "Purchase not found" });
       }
-      
-      console.log("Found purchase:", {
-        id: purchase._id,
-        userId: purchase.userId,
-        courseId: purchase.courseId._id,
-        status: purchase.status,
-        paymentId: purchase.paymentId
-      });
 
-      // Only process if not already completed
-      if (purchase.status !== "completed") {
-        if (session.amount_total) {
-          purchase.amount = session.amount_total / 100;
-        }
-        purchase.status = "completed";
+      if (session.amount_total) {
+        purchase.amount = session.amount_total / 100;
+      }
+      purchase.status = "completed";
 
       // Make all lectures visible by setting `isPreviewFree` to true
       if (purchase.courseId && purchase.courseId.lectures.length > 0) {
@@ -204,136 +141,20 @@ export const stripeWebhook = async (req, res) => {
         { new: true }
       );
 
-        // Update course to add user ID to enrolledStudents
-        await Course.findByIdAndUpdate(
-          purchase.courseId._id,
-          { $addToSet: { enrolledStudents: purchase.userId } }, // Add user ID to enrolledStudents
-          { new: true }
-        );
-
-        console.log("Purchase completed successfully for user:", purchase.userId);
-      }
+      // Update course to add user ID to enrolledStudents
+      await Course.findByIdAndUpdate(
+        purchase.courseId._id,
+        { $addToSet: { enrolledStudents: purchase.userId } }, // Add user ID to enrolledStudents
+        { new: true }
+      );
     } catch (error) {
       console.error("Error handling event:", error);
-      return res.status(200).json({ received: true, error: error.message });
+      return res.status(500).json({ message: "Internal Server Error" });
     }
-  } else {
-    console.log("Event type not handled:", event.type);
   }
-  
-  console.log("=== WEBHOOK PROCESSING COMPLETE ===");
-  res.status(200).json({ received: true, eventType: event.type });
+  res.status(200).send();
 };
 
-// export const stripeWebhook = async (req, res) => {
-//   let event;
-//   const sig = req.headers['stripe-signature'];
-
-//   try {
-//     event = stripe.webhooks.constructEvent(
-//       req.body,
-//       sig,
-//       process.env.WEBHOOK_ENDPOINT_SECRET
-//     );
-//   } catch (error) {
-//     try {
-//       const raw = Buffer.isBuffer(req.body) ? req.body.toString() : req.body;
-//       event = typeof raw === 'string' ? JSON.parse(raw) : raw;
-//     } catch (parseErr) {
-//       console.error("Webhook parse error:", parseErr.message);
-//       return res.status(400).send(`Webhook error: ${error.message}`);
-//     }
-//   }
-
-//   console.log(`Received event type: ${event.type}`);
-
-//   try {
-//     // Handle multiple event types that indicate successful payment
-//     if (event.type === "checkout.session.completed" || 
-//         event.type === "payment_intent.succeeded" ||
-//         event.type === "charge.succeeded" ||
-//         event.type === "charge.updated") {
-      
-//       let session;
-      
-//       if (event.type === "checkout.session.completed") {
-//         session = event.data.object;
-//       } else if (event.type === "payment_intent.succeeded") {
-//         const paymentIntent = event.data.object;
-//         const sessions = await stripe.checkout.sessions.list({
-//           payment_intent: paymentIntent.id,
-//           limit: 1
-//         });
-//         session = sessions.data[0];
-//       } else if (event.type === "charge.succeeded" || event.type === "charge.updated") {
-//         const charge = event.data.object;
-//         // Only process if charge is successful
-//         if (charge.status === 'succeeded') {
-//           const sessions = await stripe.checkout.sessions.list({
-//             payment_intent: charge.payment_intent,
-//             limit: 1
-//           });
-//           session = sessions.data[0];
-//         }
-//       }
-
-//       if (!session) {
-//         console.log("No session found for event:", event.type);
-//         return res.status(200).json({ received: true });
-//       }
-
-//       console.log("Processing purchase for session:", session.id);
-
-//       const purchase = await CoursePurchase.findOne({
-//         paymentId: session.id,
-//       }).populate({ path: "courseId" });
-
-//       if (!purchase) {
-//         console.log("Purchase not found for paymentId:", session.id);
-//         return res.status(200).json({ received: true });
-//       }
-
-//       // Only process if not already completed
-//       if (purchase.status !== "completed") {
-//         if (session.amount_total) {
-//           purchase.amount = session.amount_total / 100;
-//         }
-//         purchase.status = "completed";
-
-//         // Make all lectures visible by setting `isPreviewFree` to true
-//         if (purchase.courseId && purchase.courseId.lectures.length > 0) {
-//           await Lecture.updateMany(
-//             { _id: { $in: purchase.courseId.lectures } },
-//             { $set: { isPreviewFree: true } }
-//           );
-//         }
-
-//         await purchase.save();
-
-//         // Update user's enrolledCourses
-//         await User.findByIdAndUpdate(
-//           purchase.userId,
-//           { $addToSet: { enrolledCourses: purchase.courseId._id } },
-//           { new: true }
-//         );
-
-//         // Update course to add user ID to enrolledStudents
-//         await Course.findByIdAndUpdate(
-//           purchase.courseId._id,
-//           { $addToSet: { enrolledStudents: purchase.userId } },
-//           { new: true }
-//         );
-
-//         console.log("Purchase completed successfully for user:", purchase.userId);
-//       }
-//     }
-//   } catch (error) {
-//     console.error("Error handling event:", error);
-//     return res.status(200).json({ received: true });
-//   }
-
-//   res.status(200).json({ received: true });
-// };
 
 
 
