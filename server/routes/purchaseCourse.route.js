@@ -31,11 +31,7 @@ import {
 const router = express.Router();
 
 
-router.post(
-  "/webhook",
-  express.raw({ type: "application/json" }),
-  stripeWebhook
-);
+
 
 
 router.post("/checkout/create-checkout-session", isAuthenticated, createCheckoutSession);
