@@ -10,7 +10,7 @@ import mediaRoute from "./routes/media.route.js";
 // import purchaseRoute from "./routes/purchaseCourse.route.js";
 import courseProgressRoute from "./routes/courseProgress.route.js";
 import { stripeWebhook } from "./controllers/coursePurchase.controller.js";
-import purchaseRoute,{webhookRouter} from "./routes/purchaseCourse.route.js";
+import purchaseRoute from "./routes/purchaseCourse.route.js";
 import lectureNoteRoute from "./routes/lectureNote.route.js";
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -48,7 +48,7 @@ app.get("/api/csrf-token", csrfProtection, (req, res) => {
 
 
 
-app.use("/api/v1/purchase", webhookRouter);
+app.use("/api/v1/purchase", purchaseRoute);
 
 app.use(cors({
     origin:"https://skillifyapp.vercel.app",
