@@ -10,7 +10,7 @@ import mediaRoute from "./routes/media.route.js";
 // import purchaseRoute from "./routes/purchaseCourse.route.js";
 import courseProgressRoute from "./routes/courseProgress.route.js";
 import { stripeWebhook } from "./controllers/coursePurchase.controller.js";
-import purchaseRoute from "./routes/purchaseCourse.route.js";
+import purchaseRoute,{webhookRouter} from "./routes/purchaseCourse.route.js";
 import lectureNoteRoute from "./routes/lectureNote.route.js";
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -27,11 +27,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Register webhook routes FIRST - before any middleware that might interfere
-app.post("/api/v1/purchase/webhook", express.raw({ type: "application/json" }), stripeWebhook);
-// Extra tolerant routes in case the configured endpoint omits the prefix
-// app.post("/purchase/webhook", express.raw({ type: "application/json" }), stripeWebhook);
-// app.post("/webhook", express.raw({ type: "application/json" }), stripeWebhook);
-// Additional webhook endpoints for common Stripe configurations
+// app.post("/api/v1/purchase/webhook", express.raw({ type: "application/json" }), stripeWebhook);
+
 
 
 
@@ -51,7 +48,7 @@ app.get("/api/csrf-token", csrfProtection, (req, res) => {
 
 
 
-
+app.use("/api/v1/purchase", webhookRouter);
 
 app.use(cors({
     origin:"https://skillifyapp.vercel.app",
