@@ -10,7 +10,7 @@ import mediaRoute from "./routes/media.route.js";
 // import purchaseRoute from "./routes/purchaseCourse.route.js";
 import courseProgressRoute from "./routes/courseProgress.route.js";
 import { stripeWebhook } from "./controllers/coursePurchase.controller.js";
-import purchaseRoute from "./routes/purchaseCourse.route.js";
+import purchaseRoute,{webhookRouter}from "./routes/purchaseCourse.route.js";
 import lectureNoteRoute from "./routes/lectureNote.route.js";
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -32,26 +32,9 @@ app.post("/api/v1/purchase/webhook", express.raw({ type: "application/json" }), 
 app.post("/purchase/webhook", express.raw({ type: "application/json" }), stripeWebhook);
 app.post("/webhook", express.raw({ type: "application/json" }), stripeWebhook);
 // Additional webhook endpoints for common Stripe configurations
-app.post("/stripe/webhook", express.raw({ type: "application/json" }), stripeWebhook);
-app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), stripeWebhook);
-app.post("/api/webhook", express.raw({ type: "application/json" }), stripeWebhook);
 
-// Catch-all webhook route for any other patterns
-app.post("*webhook*", express.raw({ type: "application/json" }), stripeWebhook);
 
-// Test route to verify webhook endpoint is reachable
-app.get("/api/v1/purchase/webhook", (req, res) => {
-  res.status(200).json({ message: "Webhook endpoint is reachable", timestamp: new Date().toISOString() });
-});
 
-// Debug endpoint to check server status
-app.get("/health", (req, res) => {
-  res.status(200).json({ 
-    status: "OK", 
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || "development"
-  });
-});
 
 app.use(cookieParser());
 
