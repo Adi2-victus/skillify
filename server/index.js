@@ -198,6 +198,11 @@ connectDB();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.post(
+    "/api/v1/purchase/webhook",
+    express.raw({ type: "application/json" }),
+    stripeWebhook
+);
 // ------------------- CORS -------------------
 app.use(cors({
     origin: "https://skillifyapp.vercel.app",
@@ -208,11 +213,7 @@ app.use(cookieParser());
 
 // ------------------- Stripe Webhook -------------------
 // ⚠ Must be BEFORE express.json()
-app.post(
-    "/api/v1/purchase/webhook",
-    express.raw({ type: "application/json" }),
-    stripeWebhook
-);
+
 
 // ------------------- Body parsers -------------------
 app.use(express.json());
@@ -231,7 +232,7 @@ app.use("/api/v1/progress", courseProgressRoute);
 app.use("/api/v1/ai", aiAssistantRoute);
 
 // ------------------- Test Route -------------------
-app.get("/", (req, res) => res.send("Skillify backend is live"));
+// app.get("/", (req, res) => res.send("Skillify backend is live"));
 
 // ------------------- Start Server -------------------
 app.listen(PORT, () => {
