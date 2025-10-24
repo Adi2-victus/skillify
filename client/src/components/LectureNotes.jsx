@@ -7,7 +7,8 @@ import LectureNoteApi from "../features/api/lectureNoteApi.js";
 
 import { 
   useGetLectureNotesQuery, 
-  useUploadLectureNoteMutation 
+  useUploadLectureNoteMutation,
+  useDeleteLectureNoteMutation 
 } from '@/features/api/lectureNoteApi';
 import { Loader2, File, X } from 'lucide-react';
 import { toast } from 'sonner'; // Added toast import
@@ -21,6 +22,7 @@ const LectureNotes = ({ courseId, lectureId, canUpload }) => {
   } = useGetLectureNotesQuery({ courseId, lectureId });
   
   const [uploadNotes, { isLoading: isUploading }] = useUploadLectureNoteMutation();
+  const [deleteNote, { isLoading: isDeleting }] = useDeleteLectureNoteMutation();
   const [file, setFile] = useState(null);
   const fileInputRef = useRef(null);
 
@@ -61,6 +63,19 @@ const LectureNotes = ({ courseId, lectureId, canUpload }) => {
     setFile(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+  };
+
+  const handleDeleteNote = async (noteId) => {
+    if (window.confirm('Are you sure you want to delete this note?')) {
+      try {
+        await deleteNote(noteId).unwrap();
+        toast.success("Note deleted successfully!");
+        refetch();
+      } catch (error) {
+        console.error("Delete error:", error);
+        toast.error(error.data?.message || "Failed to delete note");
+      }
     }
   };
 
@@ -157,22 +172,23 @@ const LectureNotes = ({ courseId, lectureId, canUpload }) => {
                   </span>
                 </div>
                 <div className="flex gap-3 items-center">
-                  {/* <span className="text-xs text-gray-500 whitespace-nowrap">
-                    {new Date(note.uploadedAt).toLocaleDateString()}
-                  </span> */}
-                
-{/* handling */}
-                  {/* {notes?.map(note => ( */}
-  <a 
-    href={note.fileUrl} 
-    target="_blank"
-    rel="noopener noreferrer"
-    className="text-blue-600 hover:underline"
-  >
-    {note.fileName}
-  </a>
-{/* ))} */}
-
+                  <a 
+                    href={note.fileUrl} 
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline text-sm"
+                  >
+                    Download
+                  </a>
+                  {canUpload && (
+                    <button
+                      onClick={() => handleDeleteNote(note._id)}
+                      disabled={isDeleting}
+                      className="text-red-600 hover:text-red-800 text-sm font-medium disabled:opacity-50"
+                    >
+                      {isDeleting ? 'Deleting...' : 'Delete'}
+                    </button>
+                  )}
                 </div>
               </li>
             ))}

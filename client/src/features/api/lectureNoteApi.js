@@ -25,6 +25,7 @@ export const lectureNoteApi = createApi({
           // Remove Content-Type to let browser set it
         },
       }),
+      invalidatesTags: ['LectureNotes'],
     }),
     // getLectureNotes: builder.query({
     //   query: ({ lectureId, userId }) => `/${lectureId}?userId=${userId}`,
@@ -39,6 +40,7 @@ getLectureNotes: builder.query({
         url: `/${noteId}`,
         method: "DELETE",
       }),
+      invalidatesTags: ['LectureNotes'],
     }),
   }),
 });

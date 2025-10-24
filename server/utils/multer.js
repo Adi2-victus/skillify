@@ -17,9 +17,19 @@ const storage = multer.diskStorage({
   }
 });
 const upload = multer({
-    dest:"uploads/",
     storage: storage,
-  limits: { fileSize: 10 * 1024 * 1024 } // 10MB
-
+    limits: { 
+        fileSize: 10 * 1024 * 1024, // 10MB
+        files: 1
+    },
+    fileFilter: (req, file, cb) => {
+        // Allow only specific file types
+        const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain', 'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation'];
+        if (allowedTypes.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(new Error('Invalid file type. Only PDF, DOC, DOCX, TXT, PPT, and PPTX files are allowed.'), false);
+        }
+    }
 });
 export default upload

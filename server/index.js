@@ -34,6 +34,9 @@ app.post(
 app.use(cors({
     origin: "https://skillifyapp.vercel.app",
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    optionsSuccessStatus: 200
 }));
 
 app.use(cookieParser());
@@ -43,8 +46,8 @@ app.use(cookieParser());
 
 
 // ------------------- Body parsers -------------------
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // ------------------- Static uploads -------------------
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -62,6 +65,9 @@ app.use("/api/v1/ai", aiAssistantRoute);
 // app.get("/", (req, res) => res.send("Skillify backend is live"));
 
 // ------------------- Start Server -------------------
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     console.log(`Server listening at port ${PORT}`);
 });
+
+// Set server timeout to handle large file uploads
+server.timeout = 300000; // 5 minutes

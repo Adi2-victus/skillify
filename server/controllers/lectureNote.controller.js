@@ -82,13 +82,9 @@ export const deleteLectureNote = async (req, res) => {
     fs.unlink(filePath, (err) => {
       if (err) {
         console.error(err);
-        return res.status(500).json({ message: "Error deleting file" });
+        // Don't return here, continue with database deletion
       }
     });
-    // In deleteLectureNote controller
-if (user.role !== 'instructor') {
-  return res.status(403).json({ message: "Unauthorized" });
-}
 
     await LectureNote.deleteOne({ _id: noteId });
 
