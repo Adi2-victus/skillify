@@ -174,7 +174,7 @@ const Login = () => {
                   name="email"
                   value={loginInput.email}
                   onChange={(e) => changeInputHandler(e, "login")}
-                  placeholder="Eg. patel@gmail.com"
+                  placeholder="Eg. xyz@gmail.com"
                   required={true}
                 />
               </div>

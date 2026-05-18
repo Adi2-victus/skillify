@@ -3,8 +3,6 @@
 
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import LectureNoteApi from "../features/api/lectureNoteApi.js"; 
-
 import { 
   useGetLectureNotesQuery, 
   useUploadLectureNoteMutation,

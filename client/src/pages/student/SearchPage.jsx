@@ -14,8 +14,8 @@ const SearchPage = () => {
   const [sortByPrice, setSortByPrice] = useState("");
 
   const { data, isLoading } = useGetSearchCourseQuery({
-    searchQuery:query,
-    categories:selectedCategories,
+    searchQuery: query ?? "",
+    categories: selectedCategories,
     sortByPrice
   });
 
