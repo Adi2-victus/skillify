@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import { tokenCookieOptions } from "../utils/generateToken.js";
 
 const isAuthenticated = async (req, res, next) => {
   try {
@@ -20,6 +21,11 @@ const isAuthenticated = async (req, res, next) => {
     next();
   } catch (error) {
     console.log(error);
+    res.clearCookie("token", { ...tokenCookieOptions, maxAge: 0 });
+    return res.status(401).json({
+      message: "Session expired or invalid. Please log in again.",
+      success: false,
+    });
   }
 };
 export default isAuthenticated;

@@ -31,22 +31,28 @@ export const createCourse = async (req,res) => {
 
 export const searchCourse = async (req,res) => {
     try {
-        const {query = "", categories = [], sortByPrice =""} = req.query;
-        console.log(categories);
+        const {query = "", categories = "", sortByPrice =""} = req.query;
+
+        const categoryList = categories
+            ? (Array.isArray(categories) ? categories : String(categories).split(","))
+            : [];
         
         // create search query
         const searchCriteria = {
             isPublished:true,
-            $or:[
+        };
+
+        if (query) {
+            searchCriteria.$or = [
                 {courseTitle: {$regex:query, $options:"i"}},
                 {subTitle: {$regex:query, $options:"i"}},
                 {category: {$regex:query, $options:"i"}},
-            ]
+            ];
         }
 
         // if categories selected
-        if(categories.length > 0) {
-            searchCriteria.category = {$in: categories};
+        if(categoryList.length > 0) {
+            searchCriteria.category = {$in: categoryList};
         }
 
         // define sorting order
